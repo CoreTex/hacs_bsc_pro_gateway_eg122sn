@@ -3,6 +3,14 @@ from __future__ import annotations
 import aiohttp
 import asyncio
 from typing import Dict, Any
+from .const import (
+    DOMAIN,
+    CONF_IP_ADDRESS,
+    CONF_LOGIN_HASH,
+    DEFAULT_PORT,
+    LOGIN_ENDPOINT,
+    RESTART_ENDPOINT,
+)
 
 class BSCProClient:
     def __init__(self, session: aiohttp.ClientSession, base_url: str, login_hash: str):
