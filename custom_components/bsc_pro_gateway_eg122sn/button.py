@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import aiohttp
 from homeassistant.components.button import ButtonEntity
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
@@ -59,19 +60,19 @@ class BSCProRestartButton(ButtonEntity):
 
         # Schritt 1: Login
         if not await self._client.login():
-            self._hass.components.persistent_notification.async_create(
-                "Login fehlgeschlagen", title="BSC-Pro EG122SN"
+            async_create(
+                self._hass,"Login fehlgeschlagen", title="BSC-Pro EG122SN"
             )
             return
 
         # Schritt 2: Restart mit JWT
         if await self._client.restart():
-            self._hass.components.persistent_notification.async_create(
-                "EG122SN Restart ausgeführt", title="✅ Erfolg"
+            async_create(
+                self._hass,"EG122SN Restart ausgeführt", title="✅ Erfolg"
             )
         else:
-            self._hass.components.persistent_notification.async_create(
-                "Restart fehlgeschlagen", title="❌ Fehler"
+            async_create(
+                self._hass,"Restart fehlgeschlagen", title="❌ Fehler"
             )
 
     async def async_will_remove_from_hass(self) -> None:
