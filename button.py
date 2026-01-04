@@ -6,82 +6,74 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     DOMAIN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_AUTH_URL,
-    CONF_TOKEN_URL,
-    CONF_API_BASE_URL,
-    CONF_DEVICE_ID,
-    OAUTH2_SCOPES,
+    CONF_IP_ADDRESS,
+    CONF_LOGIN_HASH,
+    DEFAULT_PORT,
+    LOGIN_ENDPOINT,
+    RESTART_ENDPOINT,
 )
-from .oauth_client import OAuth2Client
+from .bsc_client import BSCProClient
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Setup from config entry."""
     data = entry.data
     session = aiohttp.ClientSession()
 
-    oauth_client = OAuth2Client(
-        session=session,
-        client_id=data[CONF_CLIENT_ID],
-        client_secret=data[CONF_CLIENT_SECRET],
-        auth_url=data[CONF_AUTH_URL],
-        token_url=data[CONF_TOKEN_URL],
-        scopes=OAUTH2_SCOPES,
-    )
-
-    button = BSCProGatewayButton(
+    button = BSCProRestartButton(
         hass=hass,
         name=entry.title,
-        oauth_client=oauth_client,
-        api_base_url=data[CONF_API_BASE_URL],
-        device_id=data[CONF_DEVICE_ID],
+        ip_address=data[CONF_IP_ADDRESS],
+        login_hash=data[CONF_LOGIN_HASH],
+        session=session,
     )
-
     async_add_entities([button])
 
-class BSCProGatewayButton(ButtonEntity):
-    """Button for BSC-Pro Gateway EG122SN restart."""
+class BSCProRestartButton(ButtonEntity):
+    """Button für BSC-Pro EG122SN Restart (Login → JWT → Restart)."""
 
     _attr_has_entity_name = True
-    _attr_name = "restart device"
+    _attr_name = "restart EG122SN"
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        name: str,
-        oauth_client: OAuth2Client,
-        api_base_url: str,
-        device_id: str,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, ip_address: str, login_hash: str, session: aiohttp.ClientSession):
         self._hass = hass
-        self._attr_unique_id = f"bsc_pro_gateway_eg122sn_restart_{device_id}"
-        self._oauth_client = oauth_client
-        self._api_base_url = api_base_url.rstrip("/")
-        self._device_id = device_id
+        self._attr_unique_id = f"bsc_eg122sn_restart_{ip_address.replace('.', '_')}"
+        self._ip_address = ip_address
+        self._login_hash = login_hash
+        self._session = session
+        self._client: BSCProClient | None = None
+
+    async def async_added_to_hass(self) -> None:
+        self._client = BSCProClient(
+            session=self._session,
+            base_url=f"http://{self._ip_address}",
+            login_hash=self._login_hash,
+        )
 
     async def async_press(self) -> None:
-        """Handle button press."""
-        token = await self._oauth_client.get_access_token()
-        # Hier deine konkrete Business-Logik / URL einfügen:
-        # Beispiel: POST https://api.bsc-pro.com/devices/<id>/restart
-        url = f"{self._api_base_url}/devices/{self._device_id}/restart"
+        """1. Login → JWT Token, 2. Restart Call."""
+        if not self._client:
+            return
 
-        headers = {
-            "Authorization": f"Bearer {token}",  # JWT-Token
-            "Content-Type": "application/json",
-        }
+        # Schritt 1: Login
+        if not await self._client.login():
+            self._hass.components.persistent_notification.async_create(
+                "Login fehlgeschlagen", title="BSC-Pro EG122SN"
+            )
+            return
 
-        # Optional: Body anpassen
-        payload = {
-            "reason": "manual_restart_from_home_assistant"
-        }
+        # Schritt 2: Restart mit JWT
+        if await self._client.restart():
+            self._hass.components.persistent_notification.async_create(
+                "EG122SN Restart ausgeführt", title="✅ Erfolg"
+            )
+        else:
+            self._hass.components.persistent_notification.async_create(
+                "Restart fehlgeschlagen", title="❌ Fehler"
+            )
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, headers=headers) as resp:
-                # Bei Bedarf Fehlerbehandlung / Logging ergänzen
-                _ = await resp.text()
+    async def async_will_remove_from_hass(self) -> None:
+        if self._client:
+            await self._client.close()

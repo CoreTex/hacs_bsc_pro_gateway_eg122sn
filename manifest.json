@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "documentation": "https://example.com/bsc-pro-eg122sn-docs",
   "issue_tracker": "https://example.com/bsc-pro-issues",
-  "codeowners": ["@your-github-user"],
+  "codeowners": ["@CoreTex"],
   "iot_class": "cloud_push",
   "integration_type": "helper",
   "config_flow": true,

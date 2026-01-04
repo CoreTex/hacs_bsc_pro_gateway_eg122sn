@@ -1,7 +1,7 @@
-restart_device:
-  name: Restart BSC-Pro Gateway EG122SN
-  description: Trigger restart over OAuth2 protected REST API.
+restart_eg122sn:
+  name: Restart BSC-Pro EG122SN
+  description: Login → JWT → Restart mit exakter API-Sequenz.
   fields:
-    device_id:
-      description: EG122SN Device ID
-      example: "eg122sn-123"
+    entity_id:
+      description: Button entity
+      example: "button.bsc_eg122sn_restart_10_0_31_228"

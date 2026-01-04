@@ -1,10 +1,8 @@
 DOMAIN = "bsc_pro_gateway_eg122sn"
 
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
-CONF_AUTH_URL = "auth_url"
-CONF_TOKEN_URL = "token_url"
-CONF_API_BASE_URL = "api_base_url"
-CONF_DEVICE_ID = "device_id"
+CONF_IP_ADDRESS = "ip_address"
+CONF_LOGIN_HASH = "login_hash"  # Der Hex-String für Login
 
-OAUTH2_SCOPES = ["device:restart"]  # anpassen für BSC-Pro API
+DEFAULT_PORT = 80
+LOGIN_ENDPOINT = "/rest/authentication/login"
+RESTART_ENDPOINT = "/rest/system/restart"
