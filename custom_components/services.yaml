@@ -1,7 +1,0 @@
-restart_eg122sn:
-  name: Restart BSC-Pro EG122SN
-  description: Login → JWT → Restart mit exakter API-Sequenz.
-  fields:
-    entity_id:
-      description: Button entity
-      example: "button.bsc_eg122sn_restart_10_0_31_228"
