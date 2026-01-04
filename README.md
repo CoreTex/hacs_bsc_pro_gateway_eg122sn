@@ -15,3 +15,5 @@ HACS-Integration für BSC-Pro EG122SN Gateway. Button führt Login → JWT → R
 1. `POST /rest/authentication/login` → JWT Token
 2. `POST /rest/system/restart` mit `X-Auth-Token`
 
+## Donate
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/networkcoder)
